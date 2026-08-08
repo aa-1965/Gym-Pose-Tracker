@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0e14" />
+  <title>GymForm — Pose Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header -->
+    <header class="header">
+      <div class="trainer-badge">
+        <div class="trainer-avatar" id="trainerAvatar">
+          <span class="avatar-icon">🏋️</span>
+        </div>
+        <div class="trainer-meta">
+          <span class="trainer-label">Trainer</span>
+          <span class="trainer-name" id="trainerName">Coach Alex</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="audio-controls">
+          <button class="icon-btn" id="btnSpeaker" title="Speaker" aria-label="Toggle speaker">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+          </button>
+          <button class="icon-btn" id="btnMute" title="Mute" aria-label="Mute">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+          <div class="volume-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="volume-icon"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
+            <input type="range" id="volumeSlider" min="0" max="100" value="75" aria-label="Volume" />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Text Instructions -->
+    <section class="instruction-bar" id="instructionBar">
+      <div class="instruction-icon">💬</div>
+      <p class="instruction-text" id="instructionText">Press Play to start. Follow the trainer's form closely.</p>
+    </section>
+
+    <!-- Main Video Area: trainer always on the left -->
+    <section class="video-section side-layout" id="videoSection">
+      <aside class="trainer-sidebar" id="trainerSidebar">
+        <img
+          id="trainerStream"
+          class="trainer-stream"
+          src="/stream/trainer?overlay=0"
+          width="1280"
+          height="720"
+          alt="Trainer"
+        />
+        <span class="video-label">Trainer</span>
+        <span class="exercise-tag" id="exerciseTag">Push-ups · Set 1/3</span>
+      </aside>
+
+      <div class="trainee-main" id="traineeMain">
+        <div class="trainee-duo">
+          <div class="duo-pane duo-camera">
+            <video id="traineeCamera" autoplay playsinline muted></video>
+            <img
+              id="traineeStream"
+              class="trainee-stream hidden"
+              src=""
+              width="1280"
+              height="720"
+              alt="Test trainee video"
+            />
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <p>Choose <strong>Live camera</strong> or <strong>Test video</strong> below, then start.</p>
+            </div>
+            <span class="video-label" id="traineePaneLabel">You</span>
+          </div>
+          <div class="duo-pane duo-skeleton">
+            <canvas id="skeletonCanvas" aria-label="Your pose skeleton"></canvas>
+            <ul class="skeleton-feedback hidden" id="skeletonFeedback"></ul>
+            <span class="video-label">Your Pose</span>
+          </div>
+        </div>
+
+        <button class="flip-btn" id="btnFlip" type="button" title="Start or stop trainee input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="btnFlipLabel">Start</span>
+        </button>
+
+        <div class="correction-toast hidden" id="correctionToast">
+          <span class="toast-icon">⚠</span>
+          <span class="toast-text" id="toastText">Straighten your left elbow</span>
+        </div>
+      </div>
+
+      <div class="speed-badge" id="speedBadge">1.0×</div>
+    </section>
+
+    <!-- Playback controls (trainer on the side) -->
+    <section class="controls-section" id="trainerControls">
+      <div class="control-group">
+        <span class="group-label">Speed</span>
+        <div class="btn-row speed-row">
+          <button class="ctrl-btn speed-down" data-speed="-0.5">−0.5×</button>
+          <button class="ctrl-btn speed-down" data-speed="-1.0">−1.0×</button>
+          <button class="ctrl-btn speed-down" data-speed="-1.5">−1.5×</button>
+          <button class="ctrl-btn speed-down" data-speed="-2.0">−2×</button>
+          <button class="ctrl-btn speed-up" data-speed="0.5">+0.5×</button>
+          <button class="ctrl-btn speed-up" data-speed="1.0">+1×</button>
+          <button class="ctrl-btn speed-up" data-speed="1.5">+1.5×</button>
+          <button class="ctrl-btn speed-up" data-speed="2.0">+2×</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="group-label">Playback</span>
+        <div class="btn-row">
+          <button class="ctrl-btn primary" id="btnPlayPause">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
+            <span>Play</span>
+          </button>
+          <button class="ctrl-btn" id="btnStop">Stop</button>
+          <button class="ctrl-btn" id="btnReplay">Replay</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="group-label">Sequence</span>
+        <div class="btn-row">
+          <button class="ctrl-btn" id="btnPrev">← Previous</button>
+          <button class="ctrl-btn" id="btnNext">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls-section" id="traineeControls">
+      <div class="control-group">
+        <span class="group-label">Trainee input</span>
+        <div class="btn-row source-row">
+          <button class="ctrl-btn toggle-btn active" id="btnSourceCamera" type="button">Live camera</button>
+          <button class="ctrl-btn toggle-btn" id="btnSourceVideo" type="button">Test video</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="group-label">Exercise Mode</span>
+        <div class="btn-row trainee-row">
+          <button class="ctrl-btn toggle-btn" id="btnMirror">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>
+            Mirror
+          </button>
+          <button class="ctrl-btn" id="btnReplayLast">Replay Last</button>
+          <button class="ctrl-btn toggle-btn" id="btnShowCorrections">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Corrections
+          </button>
+          <button class="ctrl-btn accent" id="btnMirrorExercise">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Mirror &amp; Do
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Dashboard -->
+    <section class="dashboard">
+      <div class="dash-card score-card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h3>Score Card</h3>
+        </div>
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 120 120" class="score-ring">
+            <circle cx="60" cy="60" r="52" class="ring-bg"/>
+            <circle cx="60" cy="60" r="52" class="ring-fill" id="scoreRing" stroke-dasharray="327" stroke-dashoffset="82"/>
+          </svg>
+          <div class="score-value">
+            <span class="score-num" id="scoreNum">75</span>
+            <span class="score-unit">%</span>
+          </div>
+        </div>
+        <div class="score-breakdown">
+          <div class="breakdown-item"><span>Form</span><span id="formScore">78%</span></div>
+          <div class="breakdown-item"><span>Timing</span><span id="timingScore">72%</span></div>
+          <div class="breakdown-item"><span>Range</span><span id="rangeScore">75%</span></div>
+        </div>
+      </div>
+
+      <div class="dash-card progress-card">
+        <div class="card-header">
+          <span class="card-icon">📈</span>
+          <h3>Progress</h3>
+          <div class="time-tabs">
+            <button class="tab active" data-period="day">Day</button>
+            <button class="tab" data-period="week">Week</button>
+            <button class="tab" data-period="month">Month</button>
+          </div>
+        </div>
+        <div class="progress-chart" id="progressChart">
+          <div class="bar" style="--h:45%"><span>M</span></div>
+          <div class="bar" style="--h:62%"><span>T</span></div>
+          <div class="bar" style="--h:58%"><span>W</span></div>
+          <div class="bar active" style="--h:75%"><span>T</span></div>
+          <div class="bar" style="--h:40%"><span>F</span></div>
+          <div class="bar" style="--h:30%"><span>S</span></div>
+          <div class="bar" style="--h:20%"><span>S</span></div>
+        </div>
+        <div class="progress-stats">
+          <div><strong id="sessionsCount">12</strong><span>Sessions</span></div>
+          <div><strong id="streakCount">5</strong><span>Day streak</span></div>
+          <div><strong id="avgScore">68%</strong><span>Avg score</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/poseNotifier.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+mediapipe==0.10.9
+opencv-python==4.9.0.80
+numpy<2.0
+yt-dlp
+pyqtgraph
+PyQt5
+PyOpenGL
+PyOpenGL_accelerate
+scipy
+fastdtw
+ultralytics
+reportlab
+flask
