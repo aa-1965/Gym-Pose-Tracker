@@ -48,7 +48,72 @@ const GymAPI = (() => {
     return res.json();
   }
 
-  return { control, status, analyzeFrame, getAnalysis, summary };
+  async function getConfig() {
+    const res = await fetch(`${BASE}/api/config`);
+    return res.json();
+  }
+
+  async function setConfig(config) {
+    const res = await fetch(`${BASE}/api/config`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || `Server error (${res.status})` };
+    }
+    return data;
+  }
+
+  async function getLastRecording() {
+    const res = await fetch(`${BASE}/api/recordings/last`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || "No recording" };
+    }
+    return data;
+  }
+
+  function recordingDownloadUrl() {
+    return `${BASE}/api/recordings/last/download`;
+  }
+
+  async function getProgress(period = "week") {
+    const res = await fetch(`${BASE}/api/progress?period=${encodeURIComponent(period)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || "Could not load progress" };
+    }
+    return data;
+  }
+
+  async function saveProgressSession(session) {
+    const res = await fetch(`${BASE}/api/progress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(session),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || "Could not save progress" };
+    }
+    return data;
+  }
+
+  return {
+    control,
+    status,
+    analyzeFrame,
+    getAnalysis,
+    summary,
+    getConfig,
+    setConfig,
+    getLastRecording,
+    recordingDownloadUrl,
+    getProgress,
+    saveProgressSession,
+  };
 })();
 
 window.GymAPI = GymAPI;

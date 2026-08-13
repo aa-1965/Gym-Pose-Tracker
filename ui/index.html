@@ -12,159 +12,194 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- Header -->
-    <header class="header">
-      <div class="trainer-badge">
-        <div class="trainer-avatar" id="trainerAvatar">
-          <span class="avatar-icon">🏋️</span>
-        </div>
-        <div class="trainer-meta">
-          <span class="trainer-label">Trainer</span>
-          <span class="trainer-name" id="trainerName">Coach Alex</span>
-        </div>
+    <!-- Header: trainer photo + audio + instructions -->
+    <header class="wire-header">
+      <div class="trainer-photo" id="trainerAvatar" title="Trainer">
+        <span class="avatar-icon">🏋️</span>
       </div>
-
-      <div class="header-right">
-        <div class="audio-controls">
-          <button class="icon-btn" id="btnSpeaker" title="Speaker" aria-label="Toggle speaker">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
-          </button>
-          <button class="icon-btn" id="btnMute" title="Mute" aria-label="Mute">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-          </button>
-          <div class="volume-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="volume-icon"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
-            <input type="range" id="volumeSlider" min="0" max="100" value="75" aria-label="Volume" />
+      <div class="header-main">
+        <div class="header-top">
+          <div class="trainer-meta">
+            <span class="trainer-label">Trainer</span>
+            <span class="trainer-name" id="trainerName">Coach Alex</span>
+          </div>
+          <div class="audio-controls">
+            <button class="icon-btn" id="btnSpeaker" title="Speaker" aria-label="Toggle speaker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+            </button>
+            <button class="icon-btn" id="btnMute" title="Mute" aria-label="Mute">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            </button>
+            <div class="volume-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="volume-icon"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
+              <input type="range" id="volumeSlider" min="0" max="100" value="75" aria-label="Volume" />
+            </div>
+          </div>
+        </div>
+        <div class="instruction-panel" id="instructionPanel">
+          <section class="instruction-bar" id="instructionBar">
+            <p class="instruction-text" id="instructionText">Press Play to start. Tap Flip to see yourself and adjust the camera.</p>
+          </section>
+          <div class="suggestions-scroll">
+            <ul class="suggestions-inline" id="suggestionsList" aria-label="Corrections"></ul>
+            <p class="suggestions-inline-empty hidden" id="suggestionsEmpty"></p>
+            <span class="sr-only" id="suggestionsStatus"></span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Text Instructions -->
-    <section class="instruction-bar" id="instructionBar">
-      <div class="instruction-icon">💬</div>
-      <p class="instruction-text" id="instructionText">Press Play to start. Follow the trainer's form closely.</p>
+    <!-- Video: trainer with corner form overlay, OR full camera for adjustment -->
+    <section class="video-stage trainer-view" id="videoStage">
+      <div class="stage-trainer" id="stageTrainer">
+        <div class="video-pane trainer-pane" id="trainerPane">
+          <canvas id="trainerCanvas" class="trainer-stream" aria-label="Trainer video"></canvas>
+          <span class="pane-label">Trainer</span>
+          <span class="exercise-tag" id="exerciseTag">Push-ups · Set 1/3</span>
+          <div class="correction-toast hidden" id="correctionToast">
+            <span class="toast-icon">⚠</span>
+            <span class="toast-text" id="toastText"></span>
+          </div>
+          <div class="speed-badge" id="speedBadge">+1.0×</div>
+          <span class="rec-badge hidden" id="recBadge" aria-live="polite">REC</span>
+          <button class="stop-exercise-float hidden" id="btnStopExerciseFloat" type="button">Stop exercise</button>
+          <div class="form-overlay" id="formOverlay">
+            <span class="form-overlay-label" id="formOverlayLabel">Your form</span>
+            <img id="replayCornerStream" class="replay-corner-stream hidden" src="" alt="Your recording" />
+            <canvas id="skeletonCanvas" aria-label="Your pose"></canvas>
+            <p class="form-overlay-hint" id="skeletonHint">Set up camera</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-camera capture-only" id="stageCamera">
+        <video id="traineeCamera" autoplay playsinline muted></video>
+        <img id="traineeStream" class="trainee-stream hidden" src="" alt="Test trainee video" />
+        <div class="camera-placeholder" id="cameraPlaceholder">
+          <p>Starting camera… allow access when prompted.</p>
+        </div>
+        <span class="pane-label adjust-label">Adjust camera</span>
+      </div>
+
+      <button class="flip-btn" id="btnFlip" type="button" title="Flip between trainer and camera adjustment">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <span id="btnFlipLabel">Flip to you</span>
+      </button>
     </section>
 
-    <!-- Main Video Area: trainer always on the left -->
-    <section class="video-section side-layout" id="videoSection">
-      <aside class="trainer-sidebar" id="trainerSidebar">
-        <img
-          id="trainerStream"
-          class="trainer-stream"
-          src="/stream/trainer?overlay=0"
-          width="1280"
-          height="720"
-          alt="Trainer"
-        />
-        <span class="video-label">Trainer</span>
-        <span class="exercise-tag" id="exerciseTag">Push-ups · Set 1/3</span>
-      </aside>
-
-      <div class="trainee-main" id="traineeMain">
-        <div class="trainee-duo">
-          <div class="duo-pane duo-camera">
-            <video id="traineeCamera" autoplay playsinline muted></video>
-            <img
-              id="traineeStream"
-              class="trainee-stream hidden"
-              src=""
-              width="1280"
-              height="720"
-              alt="Test trainee video"
-            />
-            <div class="camera-placeholder" id="cameraPlaceholder">
-              <p>Choose <strong>Live camera</strong> or <strong>Test video</strong> below, then start.</p>
+    <!-- Controls: trainer playback vs trainee exercise (switches on flip) -->
+    <section class="control-bar trainer-mode" id="controlBar">
+      <div class="control-panel" id="trainerControls">
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">①</span>
+            <span class="row-label">Playback</span>
+          </div>
+          <div class="media-toolbar">
+            <div class="playback-icons">
+              <button class="icon-ctrl-btn" id="btnRewind" type="button" aria-label="Rewind 5 seconds">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 18V6l-8 6 8 6zm9 0V6l-8 6 8 6z"/></svg>
+              </button>
+              <button class="icon-ctrl-btn primary" id="btnPlayPause" type="button" aria-label="Play">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+              <button class="icon-ctrl-btn" id="btnFastForward" type="button" aria-label="Fast forward 5 seconds">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 18V6l8 6-8 6zm9 0V6l8 6-8 6z"/></svg>
+              </button>
+              <button class="icon-ctrl-btn" id="btnStop" type="button" aria-label="Stop">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+              </button>
+              <button class="icon-ctrl-btn" id="btnReplay" type="button" aria-label="Replay">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+              </button>
             </div>
-            <span class="video-label" id="traineePaneLabel">You</span>
+            <select id="speedSelect" class="speed-select" aria-label="Playback speed">
+              <option value="-2">−2×</option>
+              <option value="-1.5">−1.5×</option>
+              <option value="-1">−1×</option>
+              <option value="-0.5">−0.5×</option>
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.5">1.5×</option>
+              <option value="2">2×</option>
+            </select>
           </div>
-          <div class="duo-pane duo-skeleton">
-            <canvas id="skeletonCanvas" aria-label="Your pose skeleton"></canvas>
-            <ul class="skeleton-feedback hidden" id="skeletonFeedback"></ul>
-            <span class="video-label">Your Pose</span>
+        </div>
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">②</span>
+            <span class="row-label">Exercise</span>
+          </div>
+          <div class="btn-row">
+            <button class="ctrl-btn" id="btnPrev">← Prev</button>
+            <button class="ctrl-btn" id="btnNext">Next →</button>
           </div>
         </div>
-
-        <button class="flip-btn" id="btnFlip" type="button" title="Start or stop trainee input">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span id="btnFlipLabel">Start</span>
-        </button>
-
-        <div class="correction-toast hidden" id="correctionToast">
-          <span class="toast-icon">⚠</span>
-          <span class="toast-text" id="toastText">Straighten your left elbow</span>
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">▶</span>
+            <span class="row-label">Trainer video</span>
+          </div>
+          <div class="url-row">
+            <input type="url" id="trainerVideoUrl" class="url-input" placeholder="Video URL or path" spellcheck="false" autocomplete="off" />
+            <button type="button" class="ctrl-btn primary" id="btnLoadTrainer">Load</button>
+          </div>
         </div>
+        <p class="url-hint" id="trainerVideoHint">YouTube link or local .mp4 path</p>
       </div>
 
-      <div class="speed-badge" id="speedBadge">1.0×</div>
-    </section>
-
-    <!-- Playback controls (trainer on the side) -->
-    <section class="controls-section" id="trainerControls">
-      <div class="control-group">
-        <span class="group-label">Speed</span>
-        <div class="btn-row speed-row">
-          <button class="ctrl-btn speed-down" data-speed="-0.5">−0.5×</button>
-          <button class="ctrl-btn speed-down" data-speed="-1.0">−1.0×</button>
-          <button class="ctrl-btn speed-down" data-speed="-1.5">−1.5×</button>
-          <button class="ctrl-btn speed-down" data-speed="-2.0">−2×</button>
-          <button class="ctrl-btn speed-up" data-speed="0.5">+0.5×</button>
-          <button class="ctrl-btn speed-up" data-speed="1.0">+1×</button>
-          <button class="ctrl-btn speed-up" data-speed="1.5">+1.5×</button>
-          <button class="ctrl-btn speed-up" data-speed="2.0">+2×</button>
+      <div class="control-panel hidden" id="traineeControls">
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">◎</span>
+            <span class="row-label">Input</span>
+          </div>
+          <div class="btn-row source-row">
+            <button class="ctrl-btn toggle-btn active" id="btnSourceCamera" type="button">Camera</button>
+            <button class="ctrl-btn toggle-btn" id="btnSourceVideo" type="button">Test</button>
+          </div>
         </div>
-      </div>
-
-      <div class="control-group">
-        <span class="group-label">Playback</span>
-        <div class="btn-row">
-          <button class="ctrl-btn primary" id="btnPlayPause">
-            <svg viewBox="0 0 24 24" fill="currentColor" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
-            <span>Play</span>
-          </button>
-          <button class="ctrl-btn" id="btnStop">Stop</button>
-          <button class="ctrl-btn" id="btnReplay">Replay</button>
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">①</span>
+            <span class="row-label">Mirror</span>
+          </div>
+          <div class="btn-row">
+            <button class="ctrl-btn toggle-btn" id="btnMirror">Mirror</button>
+          </div>
         </div>
-      </div>
-
-      <div class="control-group">
-        <span class="group-label">Sequence</span>
-        <div class="btn-row">
-          <button class="ctrl-btn" id="btnPrev">← Previous</button>
-          <button class="ctrl-btn" id="btnNext">Next →</button>
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">②</span>
+            <span class="row-label">Replay</span>
+          </div>
+          <div class="btn-row">
+            <button class="ctrl-btn" id="btnReplayLast" type="button" disabled>Replay last</button>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <section class="controls-section" id="traineeControls">
-      <div class="control-group">
-        <span class="group-label">Trainee input</span>
-        <div class="btn-row source-row">
-          <button class="ctrl-btn toggle-btn active" id="btnSourceCamera" type="button">Live camera</button>
-          <button class="ctrl-btn toggle-btn" id="btnSourceVideo" type="button">Test video</button>
+        <div class="control-row">
+          <div class="row-head">
+            <span class="row-badge">③</span>
+            <span class="row-label">Corrections</span>
+          </div>
+          <div class="btn-row">
+            <button class="ctrl-btn toggle-btn" id="btnShowCorrections">Show on video</button>
+          </div>
         </div>
-      </div>
-      <div class="control-group">
-        <span class="group-label">Exercise Mode</span>
-        <div class="btn-row trainee-row">
-          <button class="ctrl-btn toggle-btn" id="btnMirror">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>
-            Mirror
-          </button>
-          <button class="ctrl-btn" id="btnReplayLast">Replay Last</button>
-          <button class="ctrl-btn toggle-btn" id="btnShowCorrections">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Corrections
-          </button>
-          <button class="ctrl-btn accent" id="btnMirrorExercise">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Mirror &amp; Do
-          </button>
+        <div class="control-row mirror-do-row">
+          <div class="row-head">
+            <span class="row-badge">⑤</span>
+            <span class="row-label">Mirror &amp; Do</span>
+          </div>
+          <div class="btn-row exercise-btns">
+            <button class="ctrl-btn accent" id="btnMirrorExercise" type="button">Start exercise</button>
+            <button class="ctrl-btn stop-exercise hidden" id="btnStopExercise" type="button" disabled>Stop exercise</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Bottom Dashboard -->
+    <!-- Score + progress -->
     <section class="dashboard">
       <div class="dash-card score-card">
         <div class="card-header">
@@ -198,15 +233,7 @@
             <button class="tab" data-period="month">Month</button>
           </div>
         </div>
-        <div class="progress-chart" id="progressChart">
-          <div class="bar" style="--h:45%"><span>M</span></div>
-          <div class="bar" style="--h:62%"><span>T</span></div>
-          <div class="bar" style="--h:58%"><span>W</span></div>
-          <div class="bar active" style="--h:75%"><span>T</span></div>
-          <div class="bar" style="--h:40%"><span>F</span></div>
-          <div class="bar" style="--h:30%"><span>S</span></div>
-          <div class="bar" style="--h:20%"><span>S</span></div>
-        </div>
+        <div class="progress-chart" id="progressChart"></div>
         <div class="progress-stats">
           <div><strong id="sessionsCount">12</strong><span>Sessions</span></div>
           <div><strong id="streakCount">5</strong><span>Day streak</span></div>
@@ -214,6 +241,21 @@
         </div>
       </div>
     </section>
+
+    <!-- Replay last exercise recording -->
+    <div class="replay-overlay hidden" id="replayOverlay" role="dialog" aria-label="Replay your last exercise">
+      <div class="replay-panel">
+        <div class="replay-panel-head">
+          <h2 class="replay-title" id="replayTitle">Your last exercise</h2>
+          <button class="replay-close" id="btnCloseReplay" type="button" aria-label="Close">×</button>
+        </div>
+        <p class="replay-meta" id="replayMeta"></p>
+        <div class="replay-actions">
+          <button class="ctrl-btn accent" id="btnCompareRecording" type="button">Compare with trainer</button>
+          <a class="ctrl-btn" id="btnDownloadRecording" href="#" download>Download MP4</a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="js/poseNotifier.js"></script>
